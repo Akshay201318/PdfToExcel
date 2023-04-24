@@ -34,7 +34,7 @@ function App() {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const items = textContent.items;
-          data['Name'] = items[2]?.str?.split(' ')[0];
+          data['Name'] = items[2]?.str?.split('-')[0];
           data['Mobile'] = items[4]?.str?.split(',')[0];
           let address = '';
           let index = 6;
