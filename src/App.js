@@ -68,6 +68,7 @@ function App() {
         );
       };
       reader.readAsArrayBuffer(pdfFile);
+      setPdfFile(null);
     }
   };
   return (
@@ -115,6 +116,7 @@ function App() {
               background: '#e5322d',
               borderRadius: 8,
               color: '#FFF',
+              cursor: 'pointer',
             }}
           >
             Select Pdf To Upload
@@ -128,6 +130,7 @@ function App() {
             background: '#e5322d',
             borderRadius: 8,
             color: '#FFF',
+            cursor: 'pointer',
           }}
         >
           Download Excel
