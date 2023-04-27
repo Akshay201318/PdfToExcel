@@ -15,19 +15,20 @@ function App() {
 
   // Handler for PDF file upload
   const handlePdfFileUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files;
     setPdfFile(file);
   };
-
   // Handler for extracting data from PDF and creating Excel
-  const handleExtractDataAndCreateExcel = () => {
+  const handleExtractDataAndCreateExcel = async () => {
     if (pdfFile) {
+      let extractedData = [];
       const reader = new FileReader();
+      let fileIndex = 0;
+      let onloadFileIndex = 0;
       reader.onload = async (e) => {
         const buffer = new Uint8Array(e.target.result);
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
         const numPages = pdf.numPages;
-        const extractedData = [];
 
         for (let i = 1; i <= numPages; i++) {
           const data = {};
@@ -46,30 +47,50 @@ function App() {
             index++;
           }
           data['Address'] = address;
-          extractedData.push(data);
+          // address = address.split(" ");
+          // address = address.slice(address.length - 2);
+          // data['State'] = address[0];
+          // data['PIN code'] = address[1];
+          // extractedData.push(data);
         }
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.json_to_sheet(extractedData);
-
-        let colFormatting = [];
-        Object.keys(extractedData[0]).forEach(() =>
-          colFormatting.push({ wch: 30 })
-        );
-        worksheet['!cols'] = colFormatting;
-
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        const excelBuffer = XLSX.write(workbook, {
-          type: 'array',
-          bookType: 'xlsx',
-        });
-        saveAs(
-          new Blob([excelBuffer], { type: 'application/octet-stream' }),
-          'extracted_data.xlsx'
-        );
+        if (onloadFileIndex === pdfFile.length - 1) {
+          writeXLfile(extractedData);
+        } else {
+          ++onloadFileIndex;
+        }
       };
-      reader.readAsArrayBuffer(pdfFile);
+      reader.readAsArrayBuffer(pdfFile[fileIndex]);
+      reader.onloadend = () => {
+        if (fileIndex === pdfFile?.length - 1) {
+          // writeXLfile();
+          return;
+        }
+        reader.readAsArrayBuffer(pdfFile[++fileIndex]);
+      };
+
       setPdfFile(null);
     }
+  };
+
+  const writeXLfile = (extractedData) => {
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(extractedData);
+
+    let colFormatting = [];
+    Object.keys(extractedData[0]).forEach(() =>
+      colFormatting.push({ wch: 30 })
+    );
+    worksheet['!cols'] = colFormatting;
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    const excelBuffer = XLSX.write(workbook, {
+      type: 'array',
+      bookType: 'xlsx',
+    });
+    saveAs(
+      new Blob([excelBuffer], { type: 'application/octet-stream' }),
+      'extracted_data.xlsx'
+    );
   };
   return (
     <div
@@ -108,6 +129,7 @@ function App() {
               opacity: 0,
               zIndex: 1,
             }}
+            multiple={true}
           />
           <div
             style={{
