@@ -9,6 +9,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 const deliveryPartners = {
   BLUEDART: true,
   'Ecom Express': true,
+  Xpressbees: true,
+  Delhivery: true,
 };
 
 function App() {
