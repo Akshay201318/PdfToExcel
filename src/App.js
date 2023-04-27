@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { saveAs } from 'file-saver';
 import * as pdfjsLib from 'pdfjs-dist';
 import * as XLSX from 'xlsx';
+import './Loader.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`; // Set workerSrc to correct URL
 
@@ -12,6 +13,7 @@ const deliveryPartners = {
 
 function App() {
   const [pdfFile, setPdfFile] = useState(null);
+  const [loader, setLoader] = useState(false);
 
   // Handler for PDF file upload
   const handlePdfFileUpload = (e) => {
@@ -20,6 +22,7 @@ function App() {
   };
   // Handler for extracting data from PDF and creating Excel
   const handleExtractDataAndCreateExcel = async () => {
+    setLoader(true);
     if (pdfFile) {
       let extractedData = [];
       const reader = new FileReader();
@@ -43,15 +46,19 @@ function App() {
             if (deliveryPartners[items[index].str]) {
               break;
             }
+            if (!items[index].str.length) {
+              index++;
+              continue;
+            }
             address += ' ' + items[index].str;
             index++;
           }
           data['Address'] = address;
-          // address = address.split(" ");
-          // address = address.slice(address.length - 2);
-          // data['State'] = address[0];
-          // data['PIN code'] = address[1];
-          // extractedData.push(data);
+          address = address.split(',');
+          address = address.slice(address.length - 2);
+          data['State'] = address[0];
+          data['PIN code'] = address[1].split(' ').join('');
+          extractedData.push(data);
         }
         if (onloadFileIndex === pdfFile.length - 1) {
           writeXLfile(extractedData);
@@ -67,8 +74,6 @@ function App() {
         }
         reader.readAsArrayBuffer(pdfFile[++fileIndex]);
       };
-
-      setPdfFile(null);
     }
   };
 
@@ -91,6 +96,8 @@ function App() {
       new Blob([excelBuffer], { type: 'application/octet-stream' }),
       'extracted_data.xlsx'
     );
+    setLoader(false);
+    setPdfFile(null);
   };
   return (
     <div
@@ -153,8 +160,15 @@ function App() {
             borderRadius: 8,
             color: '#FFF',
             cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {loader && (
+            <div class='container'>
+              <div class='loader' />
+            </div>
+          )}
           Download Excel
         </div>
       )}
